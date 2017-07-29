@@ -1,70 +1,79 @@
 package main
 
 import (
-	"bytes"
 	"math/rand"
 	"strings"
 )
 
 type Markov struct {
-	states map[[2]string][]string
+	chain map[string][]rune
+	n     int
 }
 
-func NewMarkov() *Markov {
-	markov := Markov{}
-	markov.states = make(map[[2]string][]string)
-	return &markov
+func NewMarkov(n int) *Markov {
+	return &Markov{
+		chain: map[string][]rune{},
+		n:     n,
+	}
 }
 
-func (m *Markov) Parse(text string) {
-	letters := strings.Split(text, "")
+func (m *Markov) ParseWord(word string) {
+	runes := []rune(word)
+	if m.n > len(runes) {
+		return
+	}
 
-	for i := 0; i < len(letters)-2; i++ {
-		// Initialise prefix with 2 letters as the key
-		prefix := [2]string{letters[i], letters[i+1]}
-
-		// Assign the third letter as value to the prefix
-		if _, ok := m.states[prefix]; ok {
-			m.states[prefix] = append(m.states[prefix], letters[i+2])
+	end := len(runes) - m.n
+	for i := 0; i < end; i++ {
+		key := string(runes[i : i+m.n])
+		val := runes[i+m.n]
+		if _, ok := m.chain[key]; ok {
+			m.chain[key] = append(m.chain[key], val)
 		} else {
-			m.states[prefix] = []string{letters[i+2]}
+			m.chain[key] = []rune{val}
 		}
 	}
 }
 
-func (m *Markov) Generate() string {
-	var phrase bytes.Buffer
+func (m *Markov) GenerateWord(length int) string {
+	letters := []rune(m.getRandomPrefix())
 
-	// Initialise prefix with a random key
-	prefix := m.getRandomPrefix([2]string{"", ""})
-	phrase.WriteString(strings.Join(prefix[:], ""))
-	limit := rand.Intn(12) + 4
-
-	for i := 0; i < limit; i++ {
-		suffix := getRandomLetter(m.states[prefix])
-		phrase.WriteString(suffix)
-
-		prefix = [2]string{prefix[1], suffix}
-	}
-
-	return phrase.String()
-}
-
-func (m *Markov) getRandomPrefix(prefix [2]string) [2]string {
-	// By default, go orders randomly for maps
-	for key := range m.states {
-		if key != prefix {
-			prefix = key
-			break
+	for i := m.n; i <= length; i++ {
+		lastLetters := letters[i-m.n : i]
+		// fmt.Printf("Looking for key %v\n", string(lastLetters))
+		if runes, ok := m.chain[string(lastLetters)]; ok {
+			letters = append(letters, getRandomLetter(runes))
+		} else {
+			return string(letters)
 		}
 	}
 
-	return prefix
+	return string(letters)
 }
 
-func getRandomLetter(slice []string) string {
-	if !(cap(slice) == 0) {
-		return slice[rand.Intn(len(slice))]
+func (m *Markov) GenerateBusinessName() string {
+	numWords := rand.Intn(3) + 1
+	words := []string{}
+
+	for i := 0; i < numWords; i++ {
+		wordLength := rand.Intn(7) + 4
+		word := m.GenerateWord(wordLength)
+		word = strings.Title(strings.ToLower(word))
+		words = append(words, word)
 	}
-	return ""
+
+	return strings.Join(words, " ")
+}
+
+func (m *Markov) getRandomPrefix() string {
+	// Go randomises the order of maps every time
+	for key, _ := range m.chain {
+		return key
+	}
+
+	return "ab"
+}
+
+func getRandomLetter(slice []rune) rune {
+	return slice[rand.Intn(len(slice))]
 }

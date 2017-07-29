@@ -9,7 +9,6 @@ import (
 )
 
 func main() {
-	markov := NewMarkov()
 
 	file, err := os.Open("companynames")
 	if err != nil {
@@ -17,13 +16,14 @@ func main() {
 	}
 	defer file.Close()
 
+	markov := NewMarkov(4)
+
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		str := scanner.Text()
 		words := getGoodWords(str)
-		for _, w := range words {
-			fmt.Println(w)
-			markov.Parse(w)
+		for _, word := range words {
+			markov.ParseWord(word)
 		}
 	}
 
@@ -31,13 +31,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println("===============")
-
-	for i := 0; i < 100; i++ {
-		fmt.Println(markov.Generate())
+	for i := 0; i < 20; i++ {
+		fmt.Println(markov.GenerateBusinessName())
 	}
-
-	// fmt.Printf("%+v\n", markov.states)
 }
 
 func getGoodWords(text string) []string {
@@ -53,7 +49,7 @@ func getGoodWords(text string) []string {
 }
 
 func isBadWord(text string) bool {
-	if strings.ContainsAny(text, "1234567890()'.-&") {
+	if strings.ContainsAny(text, "1234567890()'.-&/") {
 		return true
 	}
 
