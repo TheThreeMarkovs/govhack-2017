@@ -11,13 +11,13 @@ import (
 
 func main() {
 	start := time.Now()
-	file, err := os.Open("companynames")
+	file, err := os.Open("business_names.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer file.Close()
 
-	markov := NewMarkov(4, true)
+	markov := NewMarkov(4, 2, false)
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -35,6 +35,8 @@ func main() {
 	for i := 0; i < 20; i++ {
 		fmt.Println(markov.GenerateBusinessName())
 	}
+
+	// fmt.Printf("%+v\n", markov.chain)
 	fmt.Printf("\nExecution Time: %s\n", time.Since(start))
 }
 
