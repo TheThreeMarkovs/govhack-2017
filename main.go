@@ -20,9 +20,11 @@ func main() {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		str := scanner.Text()
-		str = trimShitWords(str)
-		fmt.Println(str)
-		markov.Parse(str)
+		words := getGoodWords(str)
+		for _, w := range words {
+			fmt.Println(w)
+			markov.Parse(w)
+		}
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -38,7 +40,7 @@ func main() {
 	// fmt.Printf("%+v\n", markov.states)
 }
 
-func trimShitWords(text string) string {
+func getGoodWords(text string) []string {
 	words := strings.Split(text, " ")
 	var newWords []string
 	for _, w := range words {
@@ -47,11 +49,11 @@ func trimShitWords(text string) string {
 		}
 	}
 
-	return strings.Join(newWords, " ")
+	return newWords
 }
 
 func isBadWord(text string) bool {
-	if strings.ContainsAny(text, "1234567890()'.-") {
+	if strings.ContainsAny(text, "1234567890()'.-&") {
 		return true
 	}
 

@@ -38,7 +38,7 @@ func (m *Markov) Generate() string {
 	// Initialise prefix with a random key
 	prefix := m.getRandomPrefix([2]string{"", ""})
 	phrase.WriteString(strings.Join(prefix[:], ""))
-	limit := rand.Intn(15) + 5
+	limit := rand.Intn(12) + 4
 
 	for i := 0; i < limit; i++ {
 		suffix := getRandomLetter(m.states[prefix])
