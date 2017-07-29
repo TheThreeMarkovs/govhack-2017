@@ -71,13 +71,17 @@ func (m *Markov) ParseWord(word string) {
 		return
 	}
 
-	end := len(runes) - m.order - m.secondaryOrder
+	end := len(runes) - m.order
 	for i := 0; i < end; i++ {
 		key := string(runes[i : i+m.order])
 		if i == 0 {
 			m.wordStarts = append(m.wordStarts, key)
 		}
-		val := string(runes[i+m.order : i+m.order+m.secondaryOrder])
+		endSlice := i + m.order + m.secondaryOrder
+		if endSlice > len(runes) {
+			endSlice = len(runes)
+		}
+		val := string(runes[i+m.order : endSlice])
 		runeCount, ok := m.chain[key]
 		if ok {
 			runeCount.addString(val)
@@ -93,11 +97,13 @@ func (m *Markov) ParseWord(word string) {
 func (m *Markov) GenerateWord(length int) string {
 	letters := []rune(m.getRandomPrefix())
 
-	for i := m.order; i <= length; i += m.secondaryOrder {
+	for i := m.order; i <= length; {
 		lastLetters := letters[i-m.order : i]
 		// fmt.Printf("Looking for key %v\n", string(lastLetters))
 		if runes, ok := m.chain[string(lastLetters)]; ok {
-			letters = append(letters, []rune(runes.getRandomString())...)
+			newRunes := []rune(runes.getRandomString())
+			letters = append(letters, newRunes...)
+			i += len(newRunes)
 		} else {
 			return string(letters)
 		}

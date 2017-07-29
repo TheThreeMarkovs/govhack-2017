@@ -17,7 +17,7 @@ func main() {
 	}
 	defer file.Close()
 
-	markov := NewMarkov(4, 2, false)
+	markov := NewMarkov(4, 4, true)
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
