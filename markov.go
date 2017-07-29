@@ -5,6 +5,17 @@ import (
 	"strings"
 )
 
+var businessEndWords = []string{
+	"Limited",
+	"Pty Ltd",
+	"Systems",
+	"Solutions",
+	"Enterprises",
+	"Holdings",
+	"International",
+	"Group",
+}
+
 type runeCounts struct {
 	countMap   map[rune]int
 	totalCount int
@@ -37,14 +48,18 @@ func (counts *runeCounts) getRandomRune() rune {
 }
 
 type Markov struct {
-	chain map[string]runeCounts
-	n     int
+	chain            map[string]runeCounts
+	n                int
+	strictWordStarts bool
+	wordStarts       []string
 }
 
-func NewMarkov(n int) *Markov {
+func NewMarkov(n int, strictWordStarts bool) *Markov {
 	return &Markov{
-		chain: map[string]runeCounts{},
-		n:     n,
+		chain:            map[string]runeCounts{},
+		n:                n,
+		strictWordStarts: strictWordStarts,
+		wordStarts:       []string{},
 	}
 }
 
@@ -57,6 +72,9 @@ func (m *Markov) ParseWord(word string) {
 	end := len(runes) - m.n
 	for i := 0; i < end; i++ {
 		key := string(runes[i : i+m.n])
+		if i == 0 {
+			m.wordStarts = append(m.wordStarts, key)
+		}
 		val := runes[i+m.n]
 		runeCount, ok := m.chain[key]
 		if ok {
@@ -97,16 +115,24 @@ func (m *Markov) GenerateBusinessName() string {
 		words = append(words, word)
 	}
 
+	if rand.Float32() > 0.5 {
+		words = append(words, businessEndWords[rand.Intn(len(businessEndWords))])
+	}
+
 	return strings.Join(words, " ")
 }
 
 func (m *Markov) getRandomPrefix() string {
-	// Go randomises the order of maps every time
-	for key, _ := range m.chain {
-		return key
+	if m.strictWordStarts {
+		return m.wordStarts[rand.Intn(len(m.wordStarts))]
+	} else {
+		// Go randomises the order of maps every time
+		for key, _ := range m.chain {
+			return key
+		}
 	}
 
-	return "ab"
+	return ""
 }
 
 func getRandomLetter(slice []rune) rune {

@@ -6,17 +6,18 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 )
 
 func main() {
-
+	start := time.Now()
 	file, err := os.Open("companynames")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer file.Close()
 
-	markov := NewMarkov(4)
+	markov := NewMarkov(4, true)
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -34,6 +35,7 @@ func main() {
 	for i := 0; i < 20; i++ {
 		fmt.Println(markov.GenerateBusinessName())
 	}
+	fmt.Printf("\nExecution Time: %s\n", time.Since(start))
 }
 
 func getGoodWords(text string) []string {
